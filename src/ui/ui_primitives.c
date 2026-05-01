@@ -2,14 +2,6 @@
 #include "ui_primitives.h"
 #include <efilib.h>
 
-#define SEG_A 0x01
-#define SEG_B 0x02
-#define SEG_C 0x04
-#define SEG_D 0x08
-#define SEG_E 0x10
-#define SEG_F 0x20
-#define SEG_G 0x40
-
 typedef struct {
     CHAR16 ch;
     UINT8 rows[7];
@@ -114,62 +106,27 @@ VOID ui_draw_text_number(UiContext *ctx, UINTN value, UINTN x, UINTN y, UINTN sc
     ui_draw_text(ctx, buf, x, y, scale, color);
 }
 
-static UINT8 digit_segments(UINTN d) {
-    static const UINT8 map[10] = {
-        SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,
-        SEG_B | SEG_C,
-        SEG_A | SEG_B | SEG_D | SEG_E | SEG_G,
-        SEG_A | SEG_B | SEG_C | SEG_D | SEG_G,
-        SEG_B | SEG_C | SEG_F | SEG_G,
-        SEG_A | SEG_C | SEG_D | SEG_F | SEG_G,
-        SEG_A | SEG_C | SEG_D | SEG_E | SEG_F | SEG_G,
-        SEG_A | SEG_B | SEG_C,
-        SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F | SEG_G,
-        SEG_A | SEG_B | SEG_C | SEG_D | SEG_F | SEG_G
-    };
-    return map[d % 10];
-}
-
-static VOID draw_digit7(UiContext *ctx, UINTN x, UINTN y, UINTN dw, UINTN dh, UINTN digit, EFI_GRAPHICS_OUTPUT_BLT_PIXEL color) {
-    UINT8 seg = digit_segments(digit);
-    UINTN t = dw / 6;
-    if (t < 2) t = 2;
-    UINTN mid = y + dh / 2 - t / 2;
-
-    if (seg & SEG_A) ui_fill_rect(ctx, x + t, y, dw - 2 * t, t, color);
-    if (seg & SEG_D) ui_fill_rect(ctx, x + t, y + dh - t, dw - 2 * t, t, color);
-    if (seg & SEG_G) ui_fill_rect(ctx, x + t, mid, dw - 2 * t, t, color);
-    if (seg & SEG_F) ui_fill_rect(ctx, x, y + t, t, dh / 2 - t, color);
-    if (seg & SEG_B) ui_fill_rect(ctx, x + dw - t, y + t, t, dh / 2 - t, color);
-    if (seg & SEG_E) ui_fill_rect(ctx, x, mid + t, t, dh / 2 - t, color);
-    if (seg & SEG_C) ui_fill_rect(ctx, x + dw - t, mid + t, t, dh / 2 - t, color);
-}
-
 VOID ui_draw_number_centered(UiContext *ctx, UINTN value, UINTN x, UINTN y, UINTN w, UINTN h, EFI_GRAPHICS_OUTPUT_BLT_PIXEL color) {
-    UINTN digits[10];
-    UINTN count = 0;
+    const UINTN base_digits = 4; /* Keep 2..2048 at one consistent visual size. */
+    UINTN scale_from_height = h / 9;
+    UINTN scale_from_width = w / (base_digits * 6 + 2);
+    UINTN scale = (scale_from_height < scale_from_width) ? scale_from_height : scale_from_width;
 
-    if (value == 0) {
-        digits[count++] = 0;
-    } else {
-        while (value > 0 && count < 10) {
-            digits[count++] = value % 10;
-            value /= 10;
-        }
+    /* If value grows beyond 4 digits, shrink only as much as needed to fit. */
+    UINTN value_fit_scale = w / (ui_number_width(value, 1) + 2);
+    if (value_fit_scale < scale) {
+        scale = value_fit_scale;
     }
 
-    UINTN digit_w = w / 6;
-    UINTN digit_h = h * 2 / 3;
-    UINTN spacing = digit_w / 4;
-    UINTN total_w = count * digit_w + (count - 1) * spacing;
-
-    UINTN ox = x + (w - total_w) / 2;
-    UINTN oy = y + (h - digit_h) / 2;
-
-    for (UINTN i = 0; i < count; ++i) {
-        UINTN d = digits[count - 1 - i];
-        draw_digit7(ctx, ox + i * (digit_w + spacing), oy, digit_w, digit_h, d, color);
+    if (scale < 1) {
+        scale = 1;
     }
+
+    UINTN text_w = ui_number_width(value, scale);
+    UINTN text_h = 7 * scale;
+    UINTN ox = x + (w - text_w) / 2 + 2;
+    UINTN oy = y + (h - text_h) / 2;
+    ui_draw_text_number(ctx, value, ox, oy, scale, color);
 }
 
 EFI_GRAPHICS_OUTPUT_BLT_PIXEL ui_tile_color(UINT32 value) {
