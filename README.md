@@ -56,6 +56,13 @@ If you still land in the UEFI shell, run this manually in that shell:
 fs0:\EFI\BOOT\BOOTX64.EFI
 ```
 
+## Sound Notes
+
+- Sound cues use the UEFI terminal bell (`\a`), which is best-effort.
+- `make run` enables QEMU PC speaker audio on macOS (`coreaudio` + `pcspk-audiodev`).
+- Even with correct QEMU audio, some OVMF builds do not render terminal bell sound.
+- If sound is still silent, check macOS output volume/device and grant audio access to your terminal/QEMU if prompted.
+
 ## Useful targets
 
 - `make help` -> list available targets

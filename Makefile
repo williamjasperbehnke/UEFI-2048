@@ -2,7 +2,7 @@ SHELL := /bin/sh
 .DEFAULT_GOAL := all
 
 APP_NAME := 2048
-SRC := src/main.c
+SRC := $(wildcard src/*.c)
 OBJ := $(SRC:.c=.o)
 SO := $(APP_NAME).so
 EFI := $(APP_NAME).efi
@@ -41,6 +41,7 @@ OVMF_PATHS := \
 	"/opt/homebrew/share/qemu/edk2-i386-code.fd" \
 	"/usr/local/share/qemu/edk2-x86_64-code.fd" \
 	"/usr/local/share/qemu/edk2-i386-code.fd"
+AUDIO_ARGS := -audiodev coreaudio,id=snd0 -machine pcspk-audiodev=snd0
 
 all: $(EFI)
 
@@ -73,7 +74,7 @@ run: stage
 		exit 1; \
 	fi; \
 	echo "Using firmware: $$OVMF_CODE"; \
-	qemu-system-x86_64 -m 256 -drive if=pflash,format=raw,readonly=on,file="$$OVMF_CODE" -drive format=raw,file=fat:rw:esp
+	qemu-system-x86_64 -m 256 $(AUDIO_ARGS) -drive if=pflash,format=raw,readonly=on,file="$$OVMF_CODE" -drive format=raw,file=fat:rw:esp
 
 run-clean:
 	docker build -t uefi-2048 .
