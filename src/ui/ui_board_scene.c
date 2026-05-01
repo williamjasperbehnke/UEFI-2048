@@ -63,7 +63,7 @@ static VOID draw_win_overlay(UiContext *ctx) {
 
     ui_fill_rect(ctx, px, py, pw, ph, UI_COLOR_ARROW_OUTLINE);
     ui_fill_rect(ctx, px + 6, py + 6, pw - 12, ph - 12, UI_COLOR_WIN);
-    ui_draw_text(ctx, L"YOU WIN!", px + 56, py + 40, 6, UI_COLOR_TEXT_LIGHT);
+    ui_draw_text(ctx, L"YOU WIN!", px + 40, py + 40, 6, UI_COLOR_TEXT_LIGHT);
     ui_draw_text(ctx, L"PRESS ANY KEY TO CONTINUE", px + 44, py + ph - 120, 3, UI_COLOR_TEXT_LIGHT);
     ui_draw_text(ctx, L"OR PRESS R TO RESTART", px + 44, py + ph - 80, 3, UI_COLOR_TEXT_LIGHT);
 }
