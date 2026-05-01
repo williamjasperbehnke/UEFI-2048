@@ -1,5 +1,6 @@
 /* UI primitives: bitmap font, 7-segment digits, and shared color palette. */
 #include "ui_primitives.h"
+#include <efilib.h>
 
 #define SEG_A 0x01
 #define SEG_B 0x02
@@ -73,6 +74,22 @@ VOID ui_draw_text(UiContext *ctx, const CHAR16 *text, UINTN x, UINTN y, UINTN sc
             }
         }
     }
+}
+
+UINTN ui_text_width(const CHAR16 *text, UINTN scale) {
+    if (text == NULL || text[0] == L'\0') {
+        return 0;
+    }
+    return StrLen(text) * 6 * scale;
+}
+
+UINTN ui_number_width(UINTN value, UINTN scale) {
+    UINTN digits = 1;
+    while (value >= 10) {
+        value /= 10;
+        ++digits;
+    }
+    return digits * 6 * scale;
 }
 
 VOID ui_draw_text_number(UiContext *ctx, UINTN value, UINTN x, UINTN y, UINTN scale, EFI_GRAPHICS_OUTPUT_BLT_PIXEL color) {

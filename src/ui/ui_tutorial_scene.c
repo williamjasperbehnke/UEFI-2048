@@ -1,6 +1,5 @@
 /* Tutorial scene: data-driven frame model and frame-specific composition. */
 #include "ui_tutorial_scene.h"
-#include <efilib.h>
 
 #include "ui_primitives.h"
 #include "ui_theme.h"
@@ -40,7 +39,7 @@ static VOID draw_tutorial_grid(UiContext *ctx, const TutorialLayout *layout) {
         layout->board_rect.y,
         layout->board_rect.w,
         layout->board_rect.h,
-        ui_rgb(187, 173, 160)
+        UI_COLOR_BOARD
     );
     for (UINTN r = 0; r < BOARD_SIZE; ++r) {
         for (UINTN c = 0; c < BOARD_SIZE; ++c) {
@@ -50,8 +49,6 @@ static VOID draw_tutorial_grid(UiContext *ctx, const TutorialLayout *layout) {
 }
 
 static VOID draw_arrow(UiContext *ctx, UINTN x, UINTN y, UINTN w, UINTN h, BOOLEAN points_left) {
-    EFI_GRAPHICS_OUTPUT_BLT_PIXEL color = ui_rgb(235, 170, 10);
-    EFI_GRAPHICS_OUTPUT_BLT_PIXEL outline = ui_rgb(162, 122, 16);
     if (w < UI_TUTORIAL_ARROW_MIN_W || h < UI_TUTORIAL_ARROW_MIN_H) return;
 
     UINTN thickness = h / 3;
@@ -62,9 +59,16 @@ static VOID draw_arrow(UiContext *ctx, UINTN x, UINTN y, UINTN w, UINTN h, BOOLE
 
     UINTN sy = y + (h - thickness) / 2;
     UINTN shaft_x = points_left ? (x + head_w) : x;
-    ui_fill_rect(ctx, shaft_x, sy, shaft_w, thickness, outline);
+    ui_fill_rect(ctx, shaft_x, sy, shaft_w, thickness, UI_COLOR_ARROW_OUTLINE);
     if (shaft_w > 4 && thickness > 4) {
-        ui_fill_rect(ctx, shaft_x + 2, sy + 2, shaft_w - 4, thickness - 4, color);
+        ui_fill_rect(
+            ctx,
+            shaft_x + UI_TUTORIAL_ARROW_INNER_INSET,
+            sy + UI_TUTORIAL_ARROW_INNER_INSET,
+            shaft_w - (2 * UI_TUTORIAL_ARROW_INNER_INSET),
+            thickness - (2 * UI_TUTORIAL_ARROW_INNER_INSET),
+            UI_COLOR_ARROW_FILL
+        );
     }
 
     /* Build an isosceles triangle head by rasterizing per scanline. */
@@ -75,52 +79,55 @@ static VOID draw_arrow(UiContext *ctx, UINTN x, UINTN y, UINTN w, UINTN h, BOOLE
         UINTN row_w = head_w - (head_w * dist) / half;
         if (row_w == 0) row_w = 1;
         UINTN row_x = points_left ? (x + head_w - row_w) : (x + shaft_w);
-        ui_fill_rect(ctx, row_x, y + yy, row_w, 1, outline);
+        ui_fill_rect(ctx, row_x, y + yy, row_w, 1, UI_COLOR_ARROW_OUTLINE);
         if (row_w > 4) {
-            ui_fill_rect(ctx, row_x + 2, y + yy, row_w - 4, 1, color);
+            ui_fill_rect(
+                ctx,
+                row_x + UI_TUTORIAL_ARROW_INNER_INSET,
+                y + yy,
+                row_w - (2 * UI_TUTORIAL_ARROW_INNER_INSET),
+                1,
+                UI_COLOR_ARROW_FILL
+            );
         }
     }
 }
 
 static VOID render_frame_move(UiContext *ctx, const TutorialLayout *layout) {
     UINTN arrow_h = layout->tile / 2;
-    if (arrow_h < 18) arrow_h = 18;
+    if (arrow_h < UI_TUTORIAL_MOVE_ARROW_MIN_H) arrow_h = UI_TUTORIAL_MOVE_ARROW_MIN_H;
 
     for (UINTN r = 0; r < 3; ++r) {
         UINTN ty = grid_y(layout, r);
-        fill_grid_tile(ctx, layout, r, 0, ui_rgb(236, 196, 74));
+        fill_grid_tile(ctx, layout, r, 0, UI_COLOR_TILE_BLOCKED);
 
         UINTN value = (r == 1) ? 4 : 2;
         UINTN value_col = (r == 1) ? 2 : 3;
         UINTN vx = grid_x(layout, value_col);
 
         ui_fill_rect(ctx, vx, ty, layout->tile, layout->tile, ui_tile_color((UINT32)value));
-        ui_draw_number_centered(ctx, value, vx, ty, layout->tile, layout->tile, ui_rgb(90, 80, 70));
+        ui_draw_number_centered(ctx, value, vx, ty, layout->tile, layout->tile, UI_COLOR_TEXT_DARK);
 
-        UINTN arrow_x = layout->board_rect.x + layout->gap + layout->tile + 8;
-        UINTN arrow_w = value_col * (layout->tile + layout->gap) - layout->tile - 8;
+        UINTN arrow_x = layout->board_rect.x + layout->gap + layout->tile + UI_TUTORIAL_MOVE_ARROW_START_PAD;
+        UINTN arrow_w = value_col * (layout->tile + layout->gap) - layout->tile - UI_TUTORIAL_MOVE_ARROW_START_PAD;
         draw_arrow(ctx, arrow_x, ty + (layout->tile - arrow_h) / 2, arrow_w, arrow_h, TRUE);
     }
 }
 
 static VOID draw_plus(UiContext *ctx, UINTN cx, UINTN cy, UINTN size) {
-    EFI_GRAPHICS_OUTPUT_BLT_PIXEL color = ui_rgb(235, 170, 10);
-    EFI_GRAPHICS_OUTPUT_BLT_PIXEL outline = ui_rgb(162, 122, 16);
     UINTN t = size / 4;
     if (t < 3) t = 3;
 
-    ui_fill_rect(ctx, cx - t / 2, cy - size / 2, t, size, outline);
-    ui_fill_rect(ctx, cx - size / 2, cy - t / 2, size, t, outline);
+    ui_fill_rect(ctx, cx - t / 2, cy - size / 2, t, size, UI_COLOR_ARROW_OUTLINE);
+    ui_fill_rect(ctx, cx - size / 2, cy - t / 2, size, t, UI_COLOR_ARROW_OUTLINE);
 
     if (t > 4 && size > 4) {
-        ui_fill_rect(ctx, cx - t / 2 + 2, cy - size / 2 + 2, t - 4, size - 4, color);
-        ui_fill_rect(ctx, cx - size / 2 + 2, cy - t / 2 + 2, size - 4, t - 4, color);
+        ui_fill_rect(ctx, cx - t / 2 + 2, cy - size / 2 + 2, t - 4, size - 4, UI_COLOR_ARROW_FILL);
+        ui_fill_rect(ctx, cx - size / 2 + 2, cy - t / 2 + 2, size - 4, t - 4, UI_COLOR_ARROW_FILL);
     }
 }
 
 static VOID draw_equals(UiContext *ctx, UINTN cx, UINTN cy, UINTN w, UINTN h) {
-    EFI_GRAPHICS_OUTPUT_BLT_PIXEL color = ui_rgb(235, 170, 10);
-    EFI_GRAPHICS_OUTPUT_BLT_PIXEL outline = ui_rgb(162, 122, 16);
     UINTN bar_h = h / 3;
     if (bar_h < 4) bar_h = 4;
     UINTN gap = h / 5;
@@ -128,11 +135,11 @@ static VOID draw_equals(UiContext *ctx, UINTN cx, UINTN cy, UINTN w, UINTN h) {
 
     UINTN top_y = cy - gap - bar_h;
     UINTN bot_y = cy + gap;
-    ui_fill_rect(ctx, cx - w / 2, top_y, w, bar_h, outline);
-    ui_fill_rect(ctx, cx - w / 2, bot_y, w, bar_h, outline);
+    ui_fill_rect(ctx, cx - w / 2, top_y, w, bar_h, UI_COLOR_ARROW_OUTLINE);
+    ui_fill_rect(ctx, cx - w / 2, bot_y, w, bar_h, UI_COLOR_ARROW_OUTLINE);
     if (w > 4 && bar_h > 4) {
-        ui_fill_rect(ctx, cx - w / 2 + 2, top_y + 2, w - 4, bar_h - 4, color);
-        ui_fill_rect(ctx, cx - w / 2 + 2, bot_y + 2, w - 4, bar_h - 4, color);
+        ui_fill_rect(ctx, cx - w / 2 + 2, top_y + 2, w - 4, bar_h - 4, UI_COLOR_ARROW_FILL);
+        ui_fill_rect(ctx, cx - w / 2 + 2, bot_y + 2, w - 4, bar_h - 4, UI_COLOR_ARROW_FILL);
     }
 }
 
@@ -158,17 +165,31 @@ static VOID render_frame_merge(UiContext *ctx, const TutorialLayout *layout) {
     UINTN y1 = grid_y(layout, 1);
     UINTN y2 = grid_y(layout, 2);
 
-    draw_merge_row(ctx, layout, y1, 2, 2, 4, ui_rgb(90, 80, 70), ui_rgb(90, 80, 70));
-    draw_merge_row(ctx, layout, y2, 8, 8, 16, ui_rgb(248, 246, 242), ui_rgb(248, 246, 242));
+    draw_merge_row(ctx, layout, y1, 2, 2, 4, UI_COLOR_TEXT_DARK, UI_COLOR_TEXT_DARK);
+    draw_merge_row(ctx, layout, y2, 8, 8, 16, UI_COLOR_TEXT_LIGHT, UI_COLOR_TEXT_LIGHT);
 
     UINTN arrow_h = (layout->tile / 2) * 3 / 4;
-    if (arrow_h < 12) arrow_h = 12;
+    if (arrow_h < UI_TUTORIAL_MERGE_ARROW_MIN_H) arrow_h = UI_TUTORIAL_MERGE_ARROW_MIN_H;
     UINTN arrow_w = ((3 * (layout->tile + layout->gap) - layout->tile / 3) * 2) / 3;
-    if (arrow_w < 64) arrow_w = 64;
-    UINTN arrow_x = layout->board_rect.x + layout->gap + layout->tile + 104;
+    if (arrow_w < UI_TUTORIAL_MERGE_ARROW_MIN_W) arrow_w = UI_TUTORIAL_MERGE_ARROW_MIN_W;
+    UINTN arrow_x = layout->board_rect.x + layout->gap + layout->tile + UI_TUTORIAL_MERGE_ARROW_X_OFFSET;
 
-    draw_arrow(ctx, arrow_x, y1 + 32 + (layout->tile - arrow_h) / 2 + layout->tile / 3, arrow_w, arrow_h, FALSE);
-    draw_arrow(ctx, arrow_x, y2 + 32 + (layout->tile - arrow_h) / 2 + layout->tile / 3, arrow_w, arrow_h, FALSE);
+    draw_arrow(
+        ctx,
+        arrow_x,
+        y1 + UI_TUTORIAL_MERGE_ARROW_Y_OFFSET + (layout->tile - arrow_h) / 2 + layout->tile / 3,
+        arrow_w,
+        arrow_h,
+        FALSE
+    );
+    draw_arrow(
+        ctx,
+        arrow_x,
+        y2 + UI_TUTORIAL_MERGE_ARROW_Y_OFFSET + (layout->tile - arrow_h) / 2 + layout->tile / 3,
+        arrow_w,
+        arrow_h,
+        FALSE
+    );
 }
 
 static VOID render_frame_goal(UiContext *ctx, const TutorialLayout *layout) {
@@ -186,18 +207,10 @@ static VOID render_frame_goal(UiContext *ctx, const TutorialLayout *layout) {
             UINT32 v = sample[r][c];
             if (v != 0) {
                 fill_grid_tile(ctx, layout, r, c, ui_tile_color(v));
-                ui_draw_number_centered(ctx, v, tx, ty, layout->tile, layout->tile, (v <= 4) ? ui_rgb(90, 80, 70) : ui_rgb(248, 246, 242));
+                ui_draw_number_centered(ctx, v, tx, ty, layout->tile, layout->tile, (v <= 4) ? UI_COLOR_TEXT_DARK : UI_COLOR_TEXT_LIGHT);
             }
         }
     }
-
-    UINTN btn_w = layout->board_rect.w * 62 / 100;
-    UINTN btn_h = layout->tile * 85 / 100;
-    UINTN bx = layout->board_rect.x + (layout->board_rect.w - btn_w) / 2;
-    UINTN by = layout->board_rect.y + layout->board_rect.h + layout->tile / 2;
-
-    ui_fill_rect(ctx, bx, by, btn_w, btn_h, ui_rgb(187, 173, 160));
-    ui_draw_text(ctx, L"LETS PLAY!", bx + btn_w / 2 - 90, by + btn_h / 2 - 14, 4, ui_rgb(248, 246, 242));
 }
 
 VOID ui_render_tutorial_scene(UiContext *ctx, UINTN frame_index) {
@@ -211,16 +224,27 @@ VOID ui_render_tutorial_scene(UiContext *ctx, UINTN frame_index) {
 
     const TutorialFrame *frame = &frames[frame_index % 3];
 
-    ui_fill_rect(ctx, 0, 0, ctx->screen_w, ctx->screen_h, ui_rgb(248, 246, 240));
+    ui_fill_rect(ctx, 0, 0, ctx->screen_w, ctx->screen_h, UI_COLOR_BG);
     draw_tutorial_grid(ctx, &layout);
 
     UINTN title_x = frame->title_x;
     if (title_x == 0) {
-        title_x = (ctx->screen_w / 2) - (StrLen(frame->title) * 6 * frame->title_scale) / 2;
+        title_x = (ctx->screen_w - ui_text_width(frame->title, frame->title_scale)) / 2;
     }
-    ui_draw_text(ctx, frame->title, title_x, frame->title_y, frame->title_scale, ui_rgb(240, 170, 20));
+    ui_draw_text(ctx, frame->title, title_x, frame->title_y, frame->title_scale, UI_COLOR_TEXT_ACCENT);
 
     frame->render_fn(ctx, &layout);
 
-    ui_draw_text(ctx, L"PRESS ANY KEY", ctx->screen_w / 2 - 108, ctx->screen_h - 52, 3, ui_rgb(120, 110, 101));
+    {
+        const CHAR16 *footer = L"PRESS ANY KEY";
+        UINTN footer_x = (ctx->screen_w - ui_text_width(footer, UI_TUTORIAL_FOOTER_SCALE)) / 2;
+        ui_draw_text(
+            ctx,
+            footer,
+            footer_x,
+            ctx->screen_h - UI_TUTORIAL_FOOTER_Y_OFFSET,
+            UI_TUTORIAL_FOOTER_SCALE,
+            UI_COLOR_TEXT_TITLE
+        );
+    }
 }

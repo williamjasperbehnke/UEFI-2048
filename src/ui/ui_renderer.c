@@ -7,6 +7,7 @@
 #include "ui_primitives.h"
 #include "ui_board_scene.h"
 #include "ui_tutorial_scene.h"
+#include "ui_theme.h"
 
 VOID ui_clear_screen(EFI_SYSTEM_TABLE *system_table) {
     UiContext ctx;
@@ -15,7 +16,7 @@ VOID ui_clear_screen(EFI_SYSTEM_TABLE *system_table) {
         return;
     }
 
-    ui_fill_rect(&ctx, 0, 0, ctx.screen_w, ctx.screen_h, ui_rgb(248, 246, 240));
+    ui_fill_rect(&ctx, 0, 0, ctx.screen_w, ctx.screen_h, UI_COLOR_BG);
 }
 
 VOID ui_draw_board(EFI_SYSTEM_TABLE *system_table, const GameState *game, BOOLEAN is_game_over) {

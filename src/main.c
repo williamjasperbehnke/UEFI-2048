@@ -39,6 +39,7 @@ efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
     BOOLEAN win_announced = FALSE;
     BOOLEAN game_over_announced = FALSE;
     BOOLEAN is_game_over = !game_has_moves(&game);
+    ui_clear_screen(system_table);
     ui_draw_board(system_table, &game, is_game_over);
 
     while (1) {
@@ -54,6 +55,7 @@ efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
             win_announced = FALSE;
             game_over_announced = FALSE;
             is_game_over = !game_has_moves(&game);
+            ui_clear_screen(system_table);
             ui_draw_board(system_table, &game, is_game_over);
             continue;
         }
