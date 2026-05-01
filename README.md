@@ -2,6 +2,26 @@
 
 Native UEFI 2048 game with a macOS-focused build and run workflow.
 
+## Demo
+
+https://youtu.be/hHvguvbnFWw
+
+### Gameplay
+
+![Gameplay 1](media/gameplay1.png)
+![Gameplay 2](media/gameplay2.png)
+
+### Tutorial
+
+![Tutorial 1](media/tutorial1.png)
+![Tutorial 2](media/tutorial2.png)
+![Tutorial 3](media/tutorial3.png)
+
+### Outcomes
+
+![Win](media/win.png)
+![Loss](media/loss.png)
+
 ## Controls
 
 - Move: Arrow keys or `W/A/S/D`
