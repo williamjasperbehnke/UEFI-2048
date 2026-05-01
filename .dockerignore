@@ -1,0 +1,6 @@
+.git
+esp/
+*.o
+*.so
+*.efi
+.DS_Store
