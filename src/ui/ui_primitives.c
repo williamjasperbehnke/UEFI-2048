@@ -72,7 +72,8 @@ UINTN ui_text_width(const CHAR16 *text, UINTN scale) {
     if (text == NULL || text[0] == L'\0') {
         return 0;
     }
-    return StrLen(text) * 6 * scale;
+    /* 5px glyphs with 1px tracking between glyph starts; no trailing tracking on last glyph. */
+    return ((StrLen(text) - 1) * 6 + 5) * scale;
 }
 
 UINTN ui_number_width(UINTN value, UINTN scale) {
@@ -81,7 +82,7 @@ UINTN ui_number_width(UINTN value, UINTN scale) {
         value /= 10;
         ++digits;
     }
-    return digits * 6 * scale;
+    return ((digits - 1) * 6 + 5) * scale;
 }
 
 VOID ui_draw_text_number(UiContext *ctx, UINTN value, UINTN x, UINTN y, UINTN scale, EFI_GRAPHICS_OUTPUT_BLT_PIXEL color) {
@@ -124,7 +125,7 @@ VOID ui_draw_number_centered(UiContext *ctx, UINTN value, UINTN x, UINTN y, UINT
 
     UINTN text_w = ui_number_width(value, scale);
     UINTN text_h = 7 * scale;
-    UINTN ox = x + (w - text_w) / 2 + 2;
+    UINTN ox = x + (w - text_w) / 2;
     UINTN oy = y + (h - text_h) / 2;
     ui_draw_text_number(ctx, value, ox, oy, scale, color);
 }
@@ -143,6 +144,18 @@ EFI_GRAPHICS_OUTPUT_BLT_PIXEL ui_tile_color(UINT32 value) {
         case 512: return ui_rgb(237, 200, 80);
         case 1024: return ui_rgb(237, 197, 63);
         case 2048: return ui_rgb(237, 194, 46);
+        case 4096: return ui_rgb(236, 187, 34);
+        case 8192: return ui_rgb(234, 180, 26);
+        case 16384: return ui_rgb(232, 173, 20);
+        case 32768: return ui_rgb(229, 166, 16);
+        case 65536: return ui_rgb(226, 159, 14);
+        case 131072: return ui_rgb(223, 152, 12);
+        case 262144: return ui_rgb(220, 146, 10);
+        case 524288: return ui_rgb(217, 140, 9);
+        case 1048576: return ui_rgb(214, 134, 8);
+        case 2097152: return ui_rgb(211, 128, 7);
+        case 4194304: return ui_rgb(208, 123, 6);
+        case 8388608: return ui_rgb(205, 118, 6);
         default: return ui_rgb(144, 122, 102);
     }
 }

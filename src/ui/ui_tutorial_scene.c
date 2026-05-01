@@ -55,10 +55,11 @@ static VOID draw_arrow(UiContext *ctx, UINTN x, UINTN y, UINTN w, UINTN h, BOOLE
     if (thickness < 4) thickness = 4;
     UINTN head_w = UI_TUTORIAL_ARROW_HEAD_WIDTH;
     if (head_w > w / 2) head_w = w / 2;
-    UINTN shaft_w = w - head_w;
+    UINTN head_join_overlap = 4;
+    UINTN shaft_w = w - head_w + head_join_overlap;
 
     UINTN sy = y + (h - thickness) / 2;
-    UINTN shaft_x = points_left ? (x + head_w) : x;
+    UINTN shaft_x = points_left ? (x + head_w - head_join_overlap) : x;
     ui_fill_rect(ctx, shaft_x, sy, shaft_w, thickness, UI_COLOR_ARROW_OUTLINE);
     if (shaft_w > 4 && thickness > 4) {
         ui_fill_rect(
@@ -78,7 +79,7 @@ static VOID draw_arrow(UiContext *ctx, UINTN x, UINTN y, UINTN w, UINTN h, BOOLE
         UINTN dist = (yy > half) ? (yy - half) : (half - yy);
         UINTN row_w = head_w - (head_w * dist) / half;
         if (row_w == 0) row_w = 1;
-        UINTN row_x = points_left ? (x + head_w - row_w) : (x + shaft_w);
+        UINTN row_x = points_left ? (x + head_w - row_w) : (x + shaft_w - head_join_overlap);
         ui_fill_rect(ctx, row_x, y + yy, row_w, 1, UI_COLOR_ARROW_OUTLINE);
         if (row_w > 4) {
             ui_fill_rect(
