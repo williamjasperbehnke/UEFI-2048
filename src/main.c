@@ -5,7 +5,7 @@
 #include "audio.h"
 #include "game.h"
 #include "input.h"
-#include "ui.h"
+#include "ui/ui_renderer.h"
 
 EFI_STATUS
 EFIAPI
@@ -14,11 +14,32 @@ efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 
     game_seed_rng(system_table);
 
+    for (UINTN i = 0; i < 3; ++i) {
+        ui_draw_tutorial_frame(system_table, i);
+
+        /* Advance on key press; if input is flaky, auto-advance after ~4 seconds. */
+        UINTN ticks = 0;
+        while (1) {
+            EFI_INPUT_KEY tutorial_key;
+            EFI_STATUS st = input_wait_key(system_table, &tutorial_key);
+            if (!EFI_ERROR(st)) {
+                break;
+            }
+
+            uefi_call_wrapper(system_table->BootServices->Stall, 1, 50000);
+            ticks++;
+            if (ticks >= 80) {
+                break;
+            }
+        }
+    }
+
     GameState game;
     game_start_new(&game);
     BOOLEAN win_announced = FALSE;
     BOOLEAN game_over_announced = FALSE;
-    ui_draw_board(system_table, &game);
+    BOOLEAN is_game_over = !game_has_moves(&game);
+    ui_draw_board(system_table, &game, is_game_over);
 
     while (1) {
         EFI_INPUT_KEY key;
@@ -32,13 +53,14 @@ efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
             audio_play_sound(system_table, AUDIO_SOUND_RESTART);
             win_announced = FALSE;
             game_over_announced = FALSE;
-            ui_draw_board(system_table, &game);
+            is_game_over = !game_has_moves(&game);
+            ui_draw_board(system_table, &game, is_game_over);
             continue;
         }
         if (input_is_quit_key(&key)) {
             break;
         }
-        if (!game_has_moves(&game)) {
+        if (is_game_over) {
             continue;
         }
 
@@ -51,12 +73,13 @@ efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
                     audio_play_sound(system_table, AUDIO_SOUND_WIN);
                     win_announced = TRUE;
                 }
-                if (!game_has_moves(&game) && !game_over_announced) {
+                is_game_over = !game_has_moves(&game);
+                if (is_game_over && !game_over_announced) {
                     audio_play_sound(system_table, AUDIO_SOUND_GAME_OVER);
                     game_over_announced = TRUE;
                 }
 
-                ui_draw_board(system_table, &game);
+                ui_draw_board(system_table, &game, is_game_over);
             }
         }
     }

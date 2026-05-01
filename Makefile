@@ -2,7 +2,7 @@ SHELL := /bin/sh
 .DEFAULT_GOAL := all
 
 APP_NAME := 2048
-SRC := $(wildcard src/*.c)
+SRC := $(shell find src -name '*.c' | sort)
 OBJ := $(SRC:.c=.o)
 SO := $(APP_NAME).so
 EFI := $(APP_NAME).efi
@@ -17,7 +17,7 @@ EFIINC := $(GNUEFI)/include/efi
 EFIINC_ARCH := $(GNUEFI)/include/efi/$(ARCH)
 EFILIB := $(GNUEFI)/lib
 
-CFLAGS := -I$(EFIINC) -I$(EFIINC_ARCH) -fno-stack-protector -fpic -fshort-wchar -mno-red-zone -Wall -Wextra -DEFI_FUNCTION_WRAPPER
+CFLAGS := -I$(EFIINC) -I$(EFIINC_ARCH) -Isrc -fno-stack-protector -fpic -fshort-wchar -mno-red-zone -Wall -Wextra -DEFI_FUNCTION_WRAPPER
 LDFLAGS := -nostdlib -znocombreloc -T $(EFILIB)/elf_$(ARCH)_efi.lds -shared -Bsymbolic -L$(EFILIB) $(EFILIB)/crt0-efi-$(ARCH).o
 LDLIBS := -lefi -lgnuefi
 
@@ -90,7 +90,8 @@ help:
 	@echo "  clean    	Remove build artifacts"
 
 clean:
-	rm -f $(OBJ) $(SO) $(EFI)
+	find src -name '*.o' -delete
+	rm -f $(SO) $(EFI)
 	rm -rf esp
 
 .PHONY: all clean stage run run-clean help
