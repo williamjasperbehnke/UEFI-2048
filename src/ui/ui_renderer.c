@@ -19,7 +19,7 @@ VOID ui_clear_screen(EFI_SYSTEM_TABLE *system_table) {
     ui_fill_rect(&ctx, 0, 0, ctx.screen_w, ctx.screen_h, UI_COLOR_BG);
 }
 
-VOID ui_draw_board(EFI_SYSTEM_TABLE *system_table, const GameState *game, BOOLEAN is_game_over) {
+VOID ui_draw_board(EFI_SYSTEM_TABLE *system_table, const GameState *game, BOOLEAN is_game_over, BOOLEAN show_win_overlay) {
     UiContext ctx;
     if (!ui_ctx_begin(&ctx, system_table)) {
         uefi_call_wrapper(system_table->ConOut->ClearScreen, 1, system_table->ConOut);
@@ -35,7 +35,7 @@ VOID ui_draw_board(EFI_SYSTEM_TABLE *system_table, const GameState *game, BOOLEA
         return;
     }
 
-    ui_render_board_scene(&ctx, game, is_game_over);
+    ui_render_board_scene(&ctx, game, is_game_over, show_win_overlay);
 }
 
 VOID ui_draw_tutorial_frame(EFI_SYSTEM_TABLE *system_table, UINTN frame_index) {

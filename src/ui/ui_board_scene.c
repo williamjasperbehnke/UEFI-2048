@@ -41,9 +41,6 @@ static VOID draw_hud(UiContext *ctx, const GameState *game) {
     ui_draw_text(ctx, L"SCORE", score_label_x, score_label_y, score_label_scale, UI_COLOR_TEXT_SCORE_LABEL);
     ui_draw_text_number(ctx, game->score, score_value_x, score_value_y, UI_HUD_SCORE_VALUE_SCALE, UI_COLOR_TEXT_LIGHT);
 
-    if (game->won) {
-        ui_draw_text(ctx, L"YOU WON", ctx->screen_w - 220, 20, 3, UI_COLOR_WIN);
-    }
 }
 
 static VOID draw_game_over_overlay(UiContext *ctx) {
@@ -58,9 +55,26 @@ static VOID draw_game_over_overlay(UiContext *ctx) {
     ui_draw_text(ctx, L"PRESS R TO RESTART", px + 44, py + ph - 80, 3, UI_COLOR_OVERLAY_TEXT_SOFT);
 }
 
-VOID ui_render_board_scene(UiContext *ctx, const GameState *game, BOOLEAN is_game_over) {
+static VOID draw_win_overlay(UiContext *ctx) {
+    UINTN pw = ctx->screen_w * 70 / 100;
+    UINTN ph = ctx->screen_h * 36 / 100;
+    UINTN px = (ctx->screen_w - pw) / 2;
+    UINTN py = (ctx->screen_h - ph) / 2;
+
+    ui_fill_rect(ctx, px, py, pw, ph, UI_COLOR_ARROW_OUTLINE);
+    ui_fill_rect(ctx, px + 6, py + 6, pw - 12, ph - 12, UI_COLOR_WIN);
+    ui_draw_text(ctx, L"YOU WIN!", px + 56, py + 40, 6, UI_COLOR_TEXT_LIGHT);
+    ui_draw_text(ctx, L"PRESS ANY KEY TO CONTINUE", px + 44, py + ph - 120, 3, UI_COLOR_TEXT_LIGHT);
+    ui_draw_text(ctx, L"OR PRESS R TO RESTART", px + 44, py + ph - 80, 3, UI_COLOR_TEXT_LIGHT);
+}
+
+VOID ui_render_board_scene(UiContext *ctx, const GameState *game, BOOLEAN is_game_over, BOOLEAN show_win_overlay) {
     draw_board_tiles(ctx, game);
     draw_hud(ctx, game);
+
+    if (game->won && show_win_overlay) {
+        draw_win_overlay(ctx);
+    }
 
     if (is_game_over) {
         draw_game_over_overlay(ctx);

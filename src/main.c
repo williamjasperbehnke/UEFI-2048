@@ -36,11 +36,13 @@ efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 
     GameState game;
     game_start_new(&game);
+
     BOOLEAN win_announced = FALSE;
+    BOOLEAN show_win_overlay = FALSE;
     BOOLEAN game_over_announced = FALSE;
     BOOLEAN is_game_over = !game_has_moves(&game);
     ui_clear_screen(system_table);
-    ui_draw_board(system_table, &game, is_game_over);
+    ui_draw_board(system_table, &game, is_game_over, show_win_overlay);
 
     while (1) {
         EFI_INPUT_KEY key;
@@ -53,10 +55,17 @@ efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
             game_start_new(&game);
             audio_play_sound(system_table, AUDIO_SOUND_RESTART);
             win_announced = FALSE;
+            show_win_overlay = FALSE;
             game_over_announced = FALSE;
             is_game_over = !game_has_moves(&game);
             ui_clear_screen(system_table);
-            ui_draw_board(system_table, &game, is_game_over);
+            ui_draw_board(system_table, &game, is_game_over, show_win_overlay);
+            continue;
+        }
+        if (show_win_overlay && !input_is_restart_key(&key) && !input_is_quit_key(&key)) {
+            show_win_overlay = FALSE;
+            ui_clear_screen(system_table);
+            ui_draw_board(system_table, &game, is_game_over, show_win_overlay);
             continue;
         }
         if (input_is_quit_key(&key)) {
@@ -74,6 +83,7 @@ efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
                 if (game.won && !win_announced) {
                     audio_play_sound(system_table, AUDIO_SOUND_WIN);
                     win_announced = TRUE;
+                    show_win_overlay = TRUE;
                 }
                 is_game_over = !game_has_moves(&game);
                 if (is_game_over && !game_over_announced) {
@@ -81,7 +91,7 @@ efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
                     game_over_announced = TRUE;
                 }
 
-                ui_draw_board(system_table, &game, is_game_over);
+                ui_draw_board(system_table, &game, is_game_over, show_win_overlay);
             }
         }
     }
