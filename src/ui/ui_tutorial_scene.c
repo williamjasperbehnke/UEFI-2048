@@ -218,7 +218,7 @@ VOID ui_render_tutorial_scene(UiContext *ctx, UINTN frame_index) {
     TutorialLayout layout = ui_make_grid_layout(ctx, UI_BOARD_SCALE_PERCENT, 4);
 
     static const TutorialFrame frames[] = {
-        {L"SWIPE TO MOVE ALL TILES", 0, UI_TUTORIAL_TITLE_Y, UI_TUTORIAL_TITLE_SCALE_MOVE, render_frame_move},
+        {L"ARROW KEYS OR WASD TO MOVE ALL TILES", 0, UI_TUTORIAL_TITLE_Y, UI_TUTORIAL_TITLE_SCALE_MOVE, render_frame_move},
         {L"WHEN TWO TILES WITH SAME NUMBER TOUCH THEY MERGE", 0, UI_TUTORIAL_TITLE_Y, UI_TUTORIAL_TITLE_SCALE_MERGE, render_frame_merge},
         {L"JOIN THE NUMBERS AND GET TO THE 2048 TILE!", 0, UI_TUTORIAL_TITLE_Y, UI_TUTORIAL_TITLE_SCALE_GOAL, render_frame_goal}
     };
