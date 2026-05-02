@@ -5,6 +5,17 @@
 #include "ui/ui_board_transition.h"
 #include "ui/ui_context.h"
 
+static BOOLEAN board_changed(const GameState *before, const GameState *after) {
+    for (UINTN r = 0; r < BOARD_SIZE; ++r) {
+        for (UINTN c = 0; c < BOARD_SIZE; ++c) {
+            if (before->cells[r][c] != after->cells[r][c]) {
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}
+
 static BOOLEAN ensure_full_buffers(UiAnimationState *state, UiContext *ctx) {
     if (state->full_base != NULL && state->full_w == ctx->screen_w && state->full_h == ctx->screen_h) {
         return TRUE;
@@ -127,7 +138,7 @@ static VOID compute_post_move_without_spawn(
 
         for (UINTN k = 0; k < BOARD_SIZE; ++k) {
             UINTN r = 0, c = 0;
-            ui_map_line_index_to_cell(dir, line, k, &r, &c);
+            game_map_line_index_to_cell(dir, line, k, &r, &c);
             if (before->cells[r][c] != 0) {
                 vals[count++] = before->cells[r][c];
             }
@@ -135,7 +146,7 @@ static VOID compute_post_move_without_spawn(
 
         for (UINTN i = 0; i < count;) {
             UINTN dst_r = 0, dst_c = 0;
-            ui_map_line_index_to_cell(dir, line, write, &dst_r, &dst_c);
+            game_map_line_index_to_cell(dir, line, write, &dst_r, &dst_c);
             if (i + 1 < count && vals[i] == vals[i + 1]) {
                 out_board[dst_r][dst_c] = vals[i] * 2;
                 merge_mask[dst_r][dst_c] = TRUE;
@@ -192,7 +203,6 @@ VOID ui_animations_prime(EFI_SYSTEM_TABLE *system_table) {
 
 VOID ui_animations_run_move(UiAnimationState *state, EFI_SYSTEM_TABLE *system_table, const GameState *before, const GameState *after, MoveDir dir) {
     UiContext ctx;
-    BOOLEAN any_delta = FALSE;
 
     if (!state->config.slide_enabled || state->config.move_frames == 0) {
         return;
@@ -201,15 +211,7 @@ VOID ui_animations_run_move(UiAnimationState *state, EFI_SYSTEM_TABLE *system_ta
         return;
     }
 
-    for (UINTN r = 0; r < BOARD_SIZE && !any_delta; ++r) {
-        for (UINTN c = 0; c < BOARD_SIZE; ++c) {
-            if (before->cells[r][c] != after->cells[r][c]) {
-                any_delta = TRUE;
-                break;
-            }
-        }
-    }
-    if (!any_delta) {
+    if (!board_changed(before, after)) {
         return;
     }
 
