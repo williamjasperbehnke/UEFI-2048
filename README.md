@@ -33,10 +33,10 @@ Native UEFI 2048 game with a macOS-focused build and run workflow.
 From the project root:
 
 ```bash
-make run-clean
+make build-run
 ```
 
-`make run-clean` will:
+`make build-run` will:
 
 - build the Docker image (`uefi-2048`)
 - compile a valid UEFI app (`2048.efi`) inside Docker

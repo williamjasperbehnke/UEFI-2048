@@ -76,7 +76,7 @@ run: stage
 	echo "Using firmware: $$OVMF_CODE"; \
 	qemu-system-x86_64 -m 256 $(AUDIO_ARGS) -drive if=pflash,format=raw,readonly=on,file="$$OVMF_CODE" -drive format=raw,file=fat:rw:esp
 
-run-clean:
+build-run:
 	docker build -t uefi-2048 .
 	docker run --rm -v "$(CURDIR)":/work uefi-2048
 	$(MAKE) run
@@ -86,7 +86,7 @@ help:
 	@echo "  all      	Build $(EFI)"
 	@echo "  stage    	Copy to esp/EFI/BOOT/BOOTX64.EFI and write startup.nsh"
 	@echo "  run     	Boot in QEMU with auto-detected OVMF"
-	@echo "  run-clean 	Build in Docker and run in QEMU"
+	@echo "  build-run 	Build in Docker and run in QEMU"
 	@echo "  clean    	Remove build artifacts"
 
 clean:
@@ -94,4 +94,4 @@ clean:
 	rm -f $(SO) $(EFI)
 	rm -rf esp
 
-.PHONY: all clean stage run run-clean help
+.PHONY: all clean stage run build-run help
