@@ -3,7 +3,7 @@
 
 #include <efi.h>
 
-#include "ui_context.h"
+#include "ui/ui_context.h"
 
 VOID ui_draw_text(UiContext *ctx, const CHAR16 *text, UINTN x, UINTN y, UINTN scale, EFI_GRAPHICS_OUTPUT_BLT_PIXEL color);
 VOID ui_draw_text_number(UiContext *ctx, UINTN value, UINTN x, UINTN y, UINTN scale, EFI_GRAPHICS_OUTPUT_BLT_PIXEL color);

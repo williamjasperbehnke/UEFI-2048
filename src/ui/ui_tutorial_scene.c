@@ -1,8 +1,8 @@
 /* Tutorial scene: data-driven frame model and frame-specific composition. */
-#include "ui_tutorial_scene.h"
+#include "ui/ui_tutorial_scene.h"
 
-#include "ui_primitives.h"
-#include "ui_theme.h"
+#include "ui/ui_primitives.h"
+#include "ui/ui_theme.h"
 
 typedef UiGridLayout TutorialLayout;
 

@@ -1,5 +1,5 @@
 /* UI context: GOP setup and low-level rectangle blitting. */
-#include "ui_context.h"
+#include "ui/ui_context.h"
 
 #include <efilib.h>
 

@@ -1,5 +1,5 @@
 /* UI primitives: bitmap font, 7-segment digits, and shared color palette. */
-#include "ui_primitives.h"
+#include "ui/ui_primitives.h"
 #include <efilib.h>
 
 typedef struct {

@@ -17,7 +17,7 @@ EFIINC := $(GNUEFI)/include/efi
 EFIINC_ARCH := $(GNUEFI)/include/efi/$(ARCH)
 EFILIB := $(GNUEFI)/lib
 
-CFLAGS := -I$(EFIINC) -I$(EFIINC_ARCH) -Isrc -fno-stack-protector -fpic -fshort-wchar -mno-red-zone -Wall -Wextra -DEFI_FUNCTION_WRAPPER
+CFLAGS := -I$(EFIINC) -I$(EFIINC_ARCH) -Iinclude -Iinclude/ui -fno-stack-protector -fpic -fshort-wchar -mno-red-zone -Wall -Wextra -DEFI_FUNCTION_WRAPPER
 LDFLAGS := -nostdlib -znocombreloc -T $(EFILIB)/elf_$(ARCH)_efi.lds -shared -Bsymbolic -L$(EFILIB) $(EFILIB)/crt0-efi-$(ARCH).o
 LDLIBS := -lefi -lgnuefi
 

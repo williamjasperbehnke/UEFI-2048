@@ -5,6 +5,7 @@
 #include "audio.h"
 #include "game.h"
 #include "input.h"
+#include "ui/ui_animations.h"
 #include "ui/ui_renderer.h"
 
 EFI_STATUS
@@ -13,6 +14,9 @@ efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
     InitializeLib(image_handle, system_table);
 
     game_seed_rng(system_table);
+    UiAnimationState anim;
+    ui_animations_init(&anim);
+    ui_animations_prime(system_table);
 
     for (UINTN i = 0; i < 3; ++i) {
         ui_draw_tutorial_frame(system_table, i);
@@ -77,7 +81,9 @@ efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
 
         MoveDir dir;
         if (input_key_to_move(&key, &dir)) {
+            GameState before = game;
             if (game_apply_move(&game, dir)) {
+                ui_animations_run_move(&anim, system_table, &before, &game, dir);
                 audio_play_sound(system_table, AUDIO_SOUND_MOVE);
 
                 if (game.won && !win_announced) {

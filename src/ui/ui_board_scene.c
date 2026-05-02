@@ -1,22 +1,24 @@
 /* Board scene: in-game board, score HUD, and game-over overlay. */
-#include "ui_board_scene.h"
-#include "ui_primitives.h"
-#include "ui_theme.h"
+#include "ui/ui_board_scene.h"
 
-static VOID draw_board_tiles(UiContext *ctx, const GameState *game) {
-    UiGridLayout layout = ui_make_grid_layout(ctx, UI_BOARD_SCALE_PERCENT, UI_BOARD_MIN_GAP);
+#include "ui/ui_primitives.h"
+#include "ui/ui_theme.h"
+
+static VOID draw_board_background(UiContext *ctx, const UiGridLayout *layout) {
     ui_fill_rect(
         ctx,
-        layout.board_rect.x,
-        layout.board_rect.y,
-        layout.board_rect.w,
-        layout.board_rect.h,
+        layout->board_rect.x,
+        layout->board_rect.y,
+        layout->board_rect.w,
+        layout->board_rect.h,
         UI_COLOR_BOARD
     );
+}
 
+static VOID draw_tiles_layer(UiContext *ctx, const UiGridLayout *layout, const GameState *game) {
     for (UINTN r = 0; r < BOARD_SIZE; ++r) {
         for (UINTN c = 0; c < BOARD_SIZE; ++c) {
-            UiRect cell = ui_grid_cell_rect(&layout, r, c);
+            UiRect cell = ui_grid_cell_rect(layout, r, c);
             UINT32 value = game->cells[r][c];
             ui_fill_rect(ctx, cell.x, cell.y, cell.w, cell.h, ui_tile_color(value));
             if (value != 0) {
@@ -25,6 +27,12 @@ static VOID draw_board_tiles(UiContext *ctx, const GameState *game) {
             }
         }
     }
+}
+
+static VOID draw_board_tiles(UiContext *ctx, const GameState *game) {
+    UiGridLayout layout = ui_make_grid_layout(ctx, UI_BOARD_SCALE_PERCENT, UI_BOARD_MIN_GAP);
+    draw_board_background(ctx, &layout);
+    draw_tiles_layer(ctx, &layout, game);
 }
 
 static VOID draw_hud(UiContext *ctx, const GameState *game) {
@@ -40,7 +48,6 @@ static VOID draw_hud(UiContext *ctx, const GameState *game) {
     ui_fill_rect(ctx, UI_HUD_SCORE_BOX_X, UI_HUD_SCORE_BOX_Y, UI_HUD_SCORE_BOX_W, UI_HUD_SCORE_BOX_H, UI_COLOR_BOARD);
     ui_draw_text(ctx, L"SCORE", score_label_x, score_label_y, score_label_scale, UI_COLOR_TEXT_SCORE_LABEL);
     ui_draw_text_number(ctx, game->score, score_value_x, score_value_y, UI_HUD_SCORE_VALUE_SCALE, UI_COLOR_TEXT_LIGHT);
-
 }
 
 static VOID draw_game_over_overlay(UiContext *ctx) {

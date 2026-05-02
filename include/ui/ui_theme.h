@@ -1,7 +1,7 @@
 #ifndef UI_THEME_H
 #define UI_THEME_H
 
-#include "ui_context.h"
+#include "ui/ui_context.h"
 
 /* Shared UI layout/tuning constants. */
 #define UI_BOARD_SCALE_PERCENT 78

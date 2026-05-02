@@ -1,13 +1,12 @@
 /* UI facade: public UI API entrypoints and text-mode fallbacks. */
-#include "ui_renderer.h"
+#include "ui/ui_renderer.h"
 
 #include <efilib.h>
 
-#include "ui_context.h"
-#include "ui_primitives.h"
-#include "ui_board_scene.h"
-#include "ui_tutorial_scene.h"
-#include "ui_theme.h"
+#include "ui/ui_context.h"
+#include "ui/ui_board_scene.h"
+#include "ui/ui_tutorial_scene.h"
+#include "ui/ui_theme.h"
 
 VOID ui_clear_screen(EFI_SYSTEM_TABLE *system_table) {
     UiContext ctx;
