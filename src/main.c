@@ -84,14 +84,16 @@ efi_main(EFI_HANDLE image_handle, EFI_SYSTEM_TABLE *system_table) {
             GameState before = game;
             if (game_apply_move(&game, dir)) {
                 ui_animations_run_move(&anim, system_table, &before, &game, dir);
-                audio_play_sound(system_table, AUDIO_SOUND_MOVE);
+                is_game_over = !game_has_moves(&game);
+                if (!is_game_over) {
+                    audio_play_sound(system_table, AUDIO_SOUND_MOVE);
+                }
 
                 if (game.won && !win_announced) {
                     audio_play_sound(system_table, AUDIO_SOUND_WIN);
                     win_announced = TRUE;
                     show_win_overlay = TRUE;
                 }
-                is_game_over = !game_has_moves(&game);
                 if (is_game_over && !game_over_announced) {
                     audio_play_sound(system_table, AUDIO_SOUND_GAME_OVER);
                     game_over_announced = TRUE;

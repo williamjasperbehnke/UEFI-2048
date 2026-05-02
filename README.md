@@ -4,23 +4,23 @@ Native UEFI 2048 game with a macOS-focused build and run workflow.
 
 ## Demo
 
-https://youtu.be/hHvguvbnFWw
+[Watch the demo on YouTube](https://youtu.be/E2nCeP56KMc)
 
 ### Gameplay
 
-![Gameplay 1](media/gameplay1.png)
-![Gameplay 2](media/gameplay2.png)
+![Gameplay 1](screenshots/gameplay1.png)
+![Gameplay 2](screenshots/gameplay2.png)
 
 ### Tutorial
 
-![Tutorial 1](media/tutorial1.png)
-![Tutorial 2](media/tutorial2.png)
-![Tutorial 3](media/tutorial3.png)
+![Tutorial 1](screenshots/tutorial1.png)
+![Tutorial 2](screenshots/tutorial2.png)
+![Tutorial 3](screenshots/tutorial3.png)
 
 ### Outcomes
 
-![Win](media/win.png)
-![Loss](media/loss.png)
+![Win](screenshots/win.png)
+![Loss](screenshots/loss.png)
 
 ## Controls
 

@@ -72,12 +72,59 @@ static VOID blit_sprite_to_buf(
     }
 }
 
+static VOID blit_sprite_scaled_to_buf(
+    EFI_GRAPHICS_OUTPUT_BLT_PIXEL *dst,
+    UINTN dw,
+    UINTN dh,
+    INTN dx,
+    INTN dy,
+    const EFI_GRAPHICS_OUTPUT_BLT_PIXEL *src,
+    UINTN sw,
+    UINTN sh,
+    UINTN scaled_w,
+    UINTN scaled_h
+) {
+    if (src == NULL || scaled_w == 0 || scaled_h == 0) return;
+    for (UINTN y = 0; y < scaled_h; ++y) {
+        INTN ty = dy + (INTN)y;
+        if (ty < 0 || (UINTN)ty >= dh) continue;
+        UINTN sy = (y * sh) / scaled_h;
+        for (UINTN x = 0; x < scaled_w; ++x) {
+            INTN tx = dx + (INTN)x;
+            if (tx < 0 || (UINTN)tx >= dw) continue;
+            UINTN sx = (x * sw) / scaled_w;
+            dst[(UINTN)ty * dw + (UINTN)tx] = src[sy * sw + sx];
+        }
+    }
+}
+
 static VOID learn_visible_tile_sprites(UiContext *ctx, const UiGridLayout *layout, const GameState *game) {
     for (UINTN r = 0; r < BOARD_SIZE; ++r) {
         for (UINTN c = 0; c < BOARD_SIZE; ++c) {
             ui_tile_atlas_learn_from_cell(ctx, layout, r, c, game->cells[r][c]);
         }
     }
+}
+
+static BOOLEAN prepare_board_frame(
+    UiContext *ctx,
+    const UiGridLayout *layout,
+    const GameState *game
+) {
+    UiBoardTransitionCache *state = cache();
+    ui_tile_atlas_ensure_size(ctx->system_table, layout->tile);
+    if (!ui_board_transition_cache_ensure_board_buffers(ctx, layout)) {
+        draw_board_background(ctx, layout);
+        return FALSE;
+    }
+
+    learn_visible_tile_sprites(ctx, layout, game);
+    CopyMem(
+        state->board_frame_buffer,
+        state->board_base_buffer,
+        state->board_buf_w * state->board_buf_h * sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL)
+    );
+    return TRUE;
 }
 
 static VOID rebuild_anim_cache(const GameState *from_game, MoveDir dir) {
@@ -164,6 +211,44 @@ static VOID draw_tile_to_board_buffer(
     }
 
     draw_tile_fallback(ctx, value, x, y, w, h);
+}
+
+static VOID draw_tile_scaled_to_board_buffer(
+    UiContext *ctx,
+    const UiGridLayout *layout,
+    UINT32 value,
+    UINTN cell_x,
+    UINTN cell_y,
+    UINTN cell_w,
+    UINTN cell_h,
+    UINTN scale_percent
+) {
+    UiBoardTransitionCache *state = cache();
+    UINTN draw_w = (cell_w * scale_percent) / 100;
+    UINTN draw_h = (cell_h * scale_percent) / 100;
+    if (draw_w == 0) draw_w = 1;
+    if (draw_h == 0) draw_h = 1;
+    INTN draw_x = (INTN)cell_x + ((INTN)cell_w - (INTN)draw_w) / 2;
+    INTN draw_y = (INTN)cell_y + ((INTN)cell_h - (INTN)draw_h) / 2;
+
+    const EFI_GRAPHICS_OUTPUT_BLT_PIXEL *sprite = ui_tile_atlas_sprite(value);
+    if (sprite != NULL) {
+        blit_sprite_scaled_to_buf(
+            state->board_frame_buffer,
+            state->board_buf_w,
+            state->board_buf_h,
+            draw_x - (INTN)layout->board_rect.x,
+            draw_y - (INTN)layout->board_rect.y,
+            sprite,
+            layout->tile,
+            layout->tile,
+            draw_w,
+            draw_h
+        );
+        return;
+    }
+
+    draw_tile_fallback(ctx, value, (UINTN)draw_x, (UINTN)draw_y, draw_w, draw_h);
 }
 
 static VOID compose_stationary_tiles(UiContext *ctx, const UiGridLayout *layout) {
@@ -277,29 +362,50 @@ VOID ui_render_board_transition_scene(
     }
 
     UiGridLayout layout = ui_make_grid_layout(ctx, UI_BOARD_SCALE_PERCENT, UI_BOARD_MIN_GAP);
-    ui_tile_atlas_ensure_size(ctx->system_table, layout.tile);
-    if (!ui_board_transition_cache_ensure_board_buffers(ctx, &layout)) {
-        draw_board_background(ctx, &layout);
+    if (!prepare_board_frame(ctx, &layout, from_game)) {
         return;
     }
 
     BOOLEAN need_rebuild = !state->anim_valid
         || (state->anim_dir != dir)
         || !same_board(from_game, state->anim_board);
-    learn_visible_tile_sprites(ctx, &layout, from_game);
 
     if (need_rebuild) {
         rebuild_anim_cache(from_game, dir);
     }
 
-    CopyMem(
-        state->board_frame_buffer,
-        state->board_base_buffer,
-        state->board_buf_w * state->board_buf_h * sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL)
-    );
-
     compose_stationary_tiles(ctx, &layout);
     compose_moving_tiles(ctx, &layout, progress_numer, progress_denom);
+    present_transition_frame(ctx, &layout);
+}
+
+VOID ui_render_board_pop_scene(
+    UiContext *ctx,
+    const GameState *game,
+    const BOOLEAN pop_mask[BOARD_SIZE][BOARD_SIZE],
+    UINTN scale_percent
+) {
+    UiGridLayout layout = ui_make_grid_layout(ctx, UI_BOARD_SCALE_PERCENT, UI_BOARD_MIN_GAP);
+    if (!prepare_board_frame(ctx, &layout, game)) {
+        return;
+    }
+
+    for (UINTN r = 0; r < BOARD_SIZE; ++r) {
+        for (UINTN c = 0; c < BOARD_SIZE; ++c) {
+            UINT32 value = game->cells[r][c];
+            if (value == 0) {
+                continue;
+            }
+
+            UiRect cell = ui_grid_cell_rect(&layout, r, c);
+            if (pop_mask[r][c]) {
+                draw_tile_scaled_to_board_buffer(ctx, &layout, value, cell.x, cell.y, cell.w, cell.h, scale_percent);
+            } else {
+                draw_tile_to_board_buffer(ctx, &layout, value, cell.x, cell.y, cell.w, cell.h);
+            }
+        }
+    }
+
     present_transition_frame(ctx, &layout);
 }
 

@@ -2,3 +2,4 @@
 *.efi
 *.so
 esp/
+.DS_Store
