@@ -107,22 +107,6 @@ static VOID present_board_frame_on_full(
     );
 }
 
-static VOID map_line_index_to_cell(MoveDir dir, UINTN line, UINTN k, UINTN *out_r, UINTN *out_c) {
-    if (dir == DIR_LEFT) {
-        *out_r = line;
-        *out_c = k;
-    } else if (dir == DIR_RIGHT) {
-        *out_r = line;
-        *out_c = BOARD_SIZE - 1 - k;
-    } else if (dir == DIR_UP) {
-        *out_r = k;
-        *out_c = line;
-    } else {
-        *out_r = BOARD_SIZE - 1 - k;
-        *out_c = line;
-    }
-}
-
 static VOID compute_post_move_without_spawn(
     const GameState *before,
     MoveDir dir,
@@ -143,7 +127,7 @@ static VOID compute_post_move_without_spawn(
 
         for (UINTN k = 0; k < BOARD_SIZE; ++k) {
             UINTN r = 0, c = 0;
-            map_line_index_to_cell(dir, line, k, &r, &c);
+            ui_map_line_index_to_cell(dir, line, k, &r, &c);
             if (before->cells[r][c] != 0) {
                 vals[count++] = before->cells[r][c];
             }
@@ -151,7 +135,7 @@ static VOID compute_post_move_without_spawn(
 
         for (UINTN i = 0; i < count;) {
             UINTN dst_r = 0, dst_c = 0;
-            map_line_index_to_cell(dir, line, write, &dst_r, &dst_c);
+            ui_map_line_index_to_cell(dir, line, write, &dst_r, &dst_c);
             if (i + 1 < count && vals[i] == vals[i + 1]) {
                 out_board[dst_r][dst_c] = vals[i] * 2;
                 merge_mask[dst_r][dst_c] = TRUE;

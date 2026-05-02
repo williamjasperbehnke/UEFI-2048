@@ -12,22 +12,6 @@ static UiBoardTransitionCache *cache(VOID) {
     return ui_board_transition_cache_get();
 }
 
-static VOID map_line_index_to_cell(MoveDir dir, UINTN line, UINTN k, UINTN *out_r, UINTN *out_c) {
-    if (dir == DIR_LEFT) {
-        *out_r = line;
-        *out_c = k;
-    } else if (dir == DIR_RIGHT) {
-        *out_r = line;
-        *out_c = BOARD_SIZE - 1 - k;
-    } else if (dir == DIR_UP) {
-        *out_r = k;
-        *out_c = line;
-    } else {
-        *out_r = BOARD_SIZE - 1 - k;
-        *out_c = line;
-    }
-}
-
 static BOOLEAN same_board(const GameState *a, const UINT32 b[BOARD_SIZE][BOARD_SIZE]) {
     for (UINTN r = 0; r < BOARD_SIZE; ++r) {
         for (UINTN c = 0; c < BOARD_SIZE; ++c) {
@@ -142,7 +126,7 @@ static VOID rebuild_anim_cache(const GameState *from_game, MoveDir dir) {
         for (UINTN k = 0; k < BOARD_SIZE; ++k) {
             UINTN r = 0;
             UINTN c = 0;
-            map_line_index_to_cell(dir, line, k, &r, &c);
+            ui_map_line_index_to_cell(dir, line, k, &r, &c);
 
             if (from_game->cells[r][c] != 0) {
                 vals[count] = from_game->cells[r][c];
@@ -155,7 +139,7 @@ static VOID rebuild_anim_cache(const GameState *from_game, MoveDir dir) {
         while (i < count) {
             UINTN dst_r = 0;
             UINTN dst_c = 0;
-            map_line_index_to_cell(dir, line, write, &dst_r, &dst_c);
+            ui_map_line_index_to_cell(dir, line, write, &dst_r, &dst_c);
 
             if (i + 1 < count && vals[i] == vals[i + 1]) {
                 state->anim_tiles[state->anim_tile_count++] = (UiAnimTile){vals[i], src_r[i], src_c[i], dst_r, dst_c, TRUE};
